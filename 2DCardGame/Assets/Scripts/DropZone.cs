@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
-{    
+{
 
     // Start is called before the first frame update
     void Start()
@@ -15,7 +15,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -33,7 +33,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         if (transform.tag == "Hand")
         {
 
-            draggable.PutInHand(transform);
+            draggable.PutInHand();
 
             return;
 
@@ -45,12 +45,49 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        
+
+        if (eventData.pointerDrag == null)
+        {
+
+            return;
+
+        }
+
+        Draggable draggable = eventData.pointerDrag.GetComponent<Draggable>();
+
+        if (draggable == null)
+        {
+
+            return;
+
+        }
+
+        draggable.AddPlaceholder(transform);        
+
     }
 
     public void OnPointerExit(PointerEventData eventData)
-    {
-        
+    {        
+
+        if (eventData.pointerDrag == null)
+        {
+
+            return;
+
+        }
+
+        Draggable draggable = eventData.pointerDrag.GetComponent<Draggable>();
+
+        if (draggable == null)
+        {
+
+            return;
+
+        }
+
+        draggable.RemovePlaceholder();        
+
+
     }
 
 }

@@ -7,10 +7,13 @@ using UnityEngine.EventSystems;
 public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
 
-    Transform hand;
-    Transform canvas;
+    private Transform hand;
+    private Transform canvas;
 
-    CanvasGroup canvasGroup;
+    private GameObject placeholder;
+    private Transform fieldToDropPlaceholder = null;
+
+    private CanvasGroup canvasGroup;
 
     private bool isDraggable = true;
 
@@ -22,6 +25,8 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         canvas = transform.parent.parent;
 
         canvasGroup = GetComponent<CanvasGroup>();
+
+        placeholder = canvas.Find("Placeholder").gameObject;
 
     }
 
@@ -39,9 +44,48 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
             transform.position = eventData.position;
 
+            if (fieldToDropPlaceholder == null)
+            {
+
+                return;
+
+            }
+
+            if (placeholder.transform.parent != fieldToDropPlaceholder)
+            {
+
+                placeholder.transform.SetParent(fieldToDropPlaceholder);
+
+            }
+
+            int newSiblingIndex = fieldToDropPlaceholder.childCount;
+
+            for (int i = 0; i < fieldToDropPlaceholder.childCount; ++i)
+            {
+
+                if (transform.position.x < fieldToDropPlaceholder.GetChild(i).position.x)
+                {
+
+                    newSiblingIndex = i;
+
+                    if (placeholder.transform.GetSiblingIndex() < newSiblingIndex)
+                    {
+
+                        --newSiblingIndex;
+
+                    }
+
+                    break;
+
+                }
+
+            }
+
+            placeholder.transform.SetSiblingIndex(newSiblingIndex);
+
         }
 
-    }    
+    }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -52,37 +96,68 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             transform.SetParent(canvas);
             canvasGroup.blocksRaycasts = false;
 
+            AddPlaceholder(hand);
+            
             //Add array of valid drop zones to hightlight them
 
         }
 
     }
 
+    //Activates after OnDrop in DropZone
     public void OnEndDrag(PointerEventData eventData)
     {
 
-        if (isDraggable)
+        if (transform.parent == canvas)
         {
 
-            transform.SetParent(hand);
-            canvasGroup.blocksRaycasts = true;
+            PutInHand();
 
         }
 
+        canvasGroup.blocksRaycasts = true;
+
     }
 
-    public void PutOnField(Transform parent)
+    public void PutOnField(Transform field)
     {
 
         isDraggable = false;
-        transform.SetParent(parent);
+
+        transform.SetParent(field);
+        transform.SetSiblingIndex(placeholder.transform.GetSiblingIndex());
+
+        placeholder.transform.SetParent(canvas);
+        placeholder.SetActive(false);
 
     }
 
-    public void PutInHand(Transform parent)
+    public void PutInHand()
     {
 
-        transform.SetParent(parent);
+        transform.SetParent(hand);
+        
+        transform.SetSiblingIndex(placeholder.transform.GetSiblingIndex());
+
+        placeholder.transform.SetParent(canvas);
+        placeholder.SetActive(false);
+
+    }
+
+    public void AddPlaceholder(Transform field)
+    {
+
+        fieldToDropPlaceholder = field;
+        placeholder.SetActive(true);
+
+    }
+
+    public void RemovePlaceholder()
+    {
+
+        fieldToDropPlaceholder = null;
+        placeholder.transform.SetParent(canvas);
+        placeholder.SetActive(false);
 
     }
 
